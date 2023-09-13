@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 def computeBarycentric2D(p, UV, F):
     '''
     computeBarycentric2D computes berycentric coordinate or queryUV in fUV
+    for each face in F, its three vertices has their uv coordinate
+    the function outputs p's berycentric coordinate with respect to every 
+    triangle, which I think it's strange.
     Inputs:
         p  length 2 array
         UV |UV| by 2 array

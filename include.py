@@ -47,8 +47,14 @@ class Mesh:
 def processTrainShapes(folder):
     """
     process training shapes given a folder, including computing the half flap list and read the vertex/face lists
+    store the training meshes into meshes data structure, the mesh folder should consists of subfolders like [subd0, subd1, subd2...]
+    the mesh inside subfolder should like 001.obj, 002.obj...
+    Outputs:
+    meshes (|mesh num|, |sub num(3 by default)|)
+    meshes[i][j] = Mesh
     """
     # detect number of subd and number of meshes per subd
+    # folder should like cartoon_elephant_10, which have subfolders subd0, 1, 2
     subFolders = os.listdir(folder)
     subFolders = [x for x in subFolders if not (x.startswith('.'))]
     nSubd = len(subFolders) - 1
@@ -65,7 +71,7 @@ def processTrainShapes(folder):
     for ii in range(nObjs):
         objFiles.append(str(ii + 1).zfill(3))
 
-    # load data
+    # load data, meshes = objs * subds, meshes[i] = [meshi_subd0, meshi_subd1, meshi_subd2] 
     meshes = [None] * nObjs
     for ii in range(nObjs):
         print('process meshes %d / %d' % (ii, nObjs))
@@ -81,6 +87,7 @@ def processTrainShapes(folder):
 class TrainMeshes: 
     """
     store information of many training meshes (see gendataPKL.py for usage)
+    each folder in folders should have the structure described in processTrainShapes
     """
     def __init__(self, folders):
         """
@@ -93,14 +100,16 @@ class TrainMeshes:
             meshes = processTrainShapes(folders[fIdx])
             for ii in range(len(meshes)):
                 self.meshes.append(meshes[ii])
+        # meshes.shape = total number of meshes * subdivision levels
+        # if total B shapes, each shape has A coarse mesh, then meshes.shape = (B * A) * subd
         self.nM = len(self.meshes)  # number of meshes
-        self.nS = len(self.meshes[0])  # number of subdivision levels
+        self.nS = len(self.meshes[0])  # number of subdivision levels, by default = 3
 
         # initialize parameters required during training
         self.hfList = None  # half flap index information
         self.poolMats = None  # vertex one-ring pooling matrices
         self.dofs = None  # vertex degrees of freedom
-        self.LCs = None  # vector of differential coordinates
+        self.LCs = None  # vector of differential coordinates, (mesh num, coarse vertex num, 3)  
 
     def getInputData(self, mIdx):
         """
@@ -109,15 +118,15 @@ class TrainMeshes:
             mIdx: mesh index
         """
         input = torch.cat((
-            self.meshes[mIdx][0].V, # vertex positions
-            self.LCs[mIdx]), # vector of differential coordinates
+            self.meshes[mIdx][0].V, # vertex positions of mIdx coarse mesh, (coarse vertex num, 3)
+            self.LCs[mIdx]), # vector of differential coordinates, (coarse vertex num, 3)
             dim=1)
-        return input 
+        return input # (coarse vertex num, 6)
 
     def getHalfFlap(self):
         """
         create a list of half flap information, such that (see paper for the color scheme)
-        HF[meshIdx][subdIdx] = [v_blue, v_red, v_purple, v_yellow]
+        HF[meshIdx][subdIdx] = num of flap * [v_blue, v_red, v_purple, v_yellow]
         """
         HF = [None] * self.nM
         for ii in range(self.nM):
@@ -133,6 +142,9 @@ class TrainMeshes:
         get the matrix for vertex one-ring average pooling (left two sub-figures in Fig.17)
         Inputs:
             HF: half flap list (see self.getHalfFlap())
+        Outputs:
+            poolFlap: unknown
+            dof: (meshes, subd, vertex num)
         """
         nM = len(HF) # number of meshes
         nS = len(HF[0]) # number of subdivision levels
@@ -167,6 +179,8 @@ class TrainMeshes:
             hfList: half flap list (see self.getHalfFlap)
             poolMats: vertex one-ring pooling matrix (see self.getFlapPool)
             dofs: degrees of freedom per vertex (see self.getFlapPool)
+        Outputs:
+            LC: (mesh num, vertex num, 3)
         """
         LC = [None] * self.nM
         for mIdx in range(self.nM):
@@ -208,7 +222,8 @@ class TrainMeshes:
 
 def preprocessTestShapes(meshPathList, nSubd=2):
     """
-    process testing shapes given a list of .obj paths, including normalizing the shape and computing the half flap list
+    meshPathList: a list of .obj paths
+    process testing shapes, including normalizing the shape and computing the half flap list
     """
     nObjs = len(meshPathList)
     meshes = [None] * nObjs

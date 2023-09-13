@@ -3,7 +3,9 @@ import sys
 
 def findIdx(F, VIdx):
     '''
-    FINDIDX finds desired indices in the ndarray
+    FINDIDX finds desired indices in the ndarray, like F is row * col, and 
+    each element in F has index like 0, 1, 2..., want to find out the row & col 
+    index of an element
 
     Inputs:
     F: |F|-by-dim numpy ndarray 

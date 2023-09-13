@@ -2,6 +2,7 @@ import torch
 def findIdx(F, VIdx):
     '''
     FINDIDX finds desired indices in a torch tensor
+    should be same as pythongptoolbox.findIdx
 
     Inputs:
     F: |F|-by-dim torch tensor 

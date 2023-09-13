@@ -17,6 +17,6 @@ def adjacencyMat(F):
     edgeIdx1 = np.reshape(F[:,idx[:,0]], (np.product(F.shape)))
     edgeIdx2 = np.reshape(F[:,idx[:,1]], (np.product(F.shape)))
     data = np.ones([len(edgeIdx1)])
-    numVert = np.amax(F)+1
+    numVert = np.amax(F)+1 # vertex index starts from 0, so num = max index + 1
     A = scipy.sparse.csr_matrix((data, (edgeIdx1, edgeIdx2)), shape=(numVert,numVert), dtype = np.int32)
     return A

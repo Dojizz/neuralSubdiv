@@ -3,6 +3,9 @@ import sys
 from . normalizeRow import normalizeRow
 
 def vertexNormals(V,F):
+    """
+    return normalized vertex normal
+    """
     vec1 = V[F[:,1],:] - V[F[:,0],:]
     vec2 = V[F[:,2],:] - V[F[:,0],:]
     FN = torch.cross(vec1, vec2) / 2

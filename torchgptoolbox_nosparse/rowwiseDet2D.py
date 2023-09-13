@@ -3,6 +3,8 @@ import torch
 def rowwiseDet2D(v1List,v2List):
     '''
     rowwiseDet2D computes the determinant between two sets of 2D vectors.
+    |a b| = ad - bc
+    |c d|
     This is equivalent of 
 
     for ii in range(v1List.size(0)):
